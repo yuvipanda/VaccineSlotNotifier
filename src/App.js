@@ -48,10 +48,11 @@ const getCenters = async (district_id) => {
 
 const updateCenters = async (districtId, setCenters, setLastUpdated, setIsLoading) => {
   setIsLoading(true)
-  console.log(`Updating centers for ${districtId}`)
   setCenters(await getCenters(districtId))
   setIsLoading(false)
-  setLastUpdated(DateTime.now())
+  const lastUpdated = DateTime.now()
+  setLastUpdated(lastUpdated)
+  console.log(`Updated centers for ${districtId} at ${lastUpdated.toFormat('HH:mm:ss')}`)
 }
 
 const DistrictSelector = ({ setCenters, isLoading, setIsLoading, setLastUpdated, setDistrictId, ...props }) => {
@@ -177,9 +178,6 @@ function App() {
   const [districtId, setDistrictId] = useState(null)
   const [lastUpdated, setLastUpdated] = useState(null)
 
-  // Gets the compiler off my back
-  console.log(lastUpdated)
-
   return (
     <ChakraProvider theme={theme}>
       <Container maxW="container.lg">
@@ -194,9 +192,10 @@ function App() {
               setDistrictId={setDistrictId}
               setLastUpdated={setLastUpdated}
               setIsLoading={setIsLoading} />
-            <Flex height={1}>
+            <Box height={1} textAlign="right">
+              {(lastUpdated !== null) && "Last updated at " + lastUpdated.toFormat("HH:mm:ss")}
               {isLoading && "Updating..."}
-            </Flex>
+            </Box>
           </Box>
           {districtId !== null ?
             <Centers centers={centers} districtId={districtId} setCenters={setCenters} setIsLoading={setIsLoading} setLastUpdated={setLastUpdated} /> :
