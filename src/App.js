@@ -12,6 +12,7 @@ import {
   Container,
   Thead,
   Tbody,
+  Box,
   Spinner,
   Center,
 } from '@chakra-ui/react';
@@ -51,10 +52,15 @@ const getCenters = async (district_id) => {
   return data.centers;
 }
 
-const updateCenters = async (districtId, setCenters) => {
+const updateCenters = async (districtId, setCenters, setLastUpdated, setIsLoading) => {
+  setIsLoading(true)
+  console.log(`Updating centers for ${districtId}`)
   setCenters(await getCenters(districtId))
+  setIsLoading(false)
+  setLastUpdated(DateTime.now())
 }
-const DistrictSelector = ({ setCenters, isLoading, setIsLoading, setIsDistrictSelected }) => {
+
+const DistrictSelector = ({ setCenters, isLoading, setIsLoading, setLastUpdated, setDistrictId, ...props }) => {
   const [states, setStates] = useState([]);
   const [districts, setDistricts] = useState([]);
 
@@ -64,9 +70,9 @@ const DistrictSelector = ({ setCenters, isLoading, setIsLoading, setIsDistrictSe
     })()
   }, [])
 
-  return <Flex>
-    <Select placeholder="Select State" isDisabled={isLoading} onChange={(ev) => {
-      setIsDistrictSelected(false)
+  return <Flex {...props}>
+    <Select placeholder="Select State" onChange={(ev) => {
+      setDistrictId(null)
       setIsLoading(true);
       (async () => {
         setDistricts(await getDistricts(ev.target.value))
@@ -79,26 +85,44 @@ const DistrictSelector = ({ setCenters, isLoading, setIsLoading, setIsDistrictSe
     </Select>
     <Select isDisabled={districts === []} placeholder="Select district"
       onChange={(ev) => {
-        setIsDistrictSelected(true)
-        setIsLoading(true);
+        setDistrictId(ev.target.value);
         (async () => {
-          await updateCenters(ev.target.value, setCenters)
-          setIsLoading(false)
+          await updateCenters(ev.target.value, setCenters, setLastUpdated, setIsLoading)
         })()
       }} >
       {districts.map(district => {
         return <option key={district.district_id} value={district.district_id}>{district.district_name}</option>
       })}
     </Select>
+
   </Flex >
 }
 
-const Centers = ({ centers }) => {
+const Centers = ({ districtId, centers, setCenters, setIsLoading, setLastUpdated }) => {
+
+  useEffect(() => {
+    const handle = setInterval(() => {
+      if (districtId === null) {
+        console.log(1)
+      } else {
+        (async () => {
+          updateCenters(districtId, setCenters, setLastUpdated, setIsLoading)
+        })();
+        console.log(2)
+      }
+    }, 60 * 1000)
+    return () => {
+      console.log(5)
+      clearInterval(handle)
+    }
+  }, [])
+
+
   // Dates are always today + 7
   // FIXME
   let dates = []
   for (let i = 0; i < 7; i++) {
-    dates.push(DateTime.now().setZone('Asia/Kolkata').plus({ days: i }))
+    dates.push(DateTime.now().setZone('Asia/Kolkata').plus({ days: i }));
   }
   let availableCenters = centers.filter(c => {
     return c.sessions.some(s => s.min_age_limit < 45)
@@ -119,7 +143,7 @@ const Centers = ({ centers }) => {
     </Center>
   }
 
-  return <Table>
+  return <Table size="sm">
     <Thead>
       <Tr>
         <Td>Locality</Td>
@@ -129,16 +153,22 @@ const Centers = ({ centers }) => {
       </Tr>
     </Thead >
     <Tbody>
-      {availableCenters.map(c =>
-        <Tr key={c.center_id}>
+      {availableCenters.map(c => {
+        return < Tr key={c.center_id} >
           <Td>{c.block_name}</Td>
           <Td>{c.name}</Td>
           <Td>{c.pincode}</Td>
-          {Object.keys(c.sessionsByDate).sort().map(d =>
-            <Td isNumeric key={d}>{c.sessionsByDate[d].available_capacity}</Td>
-          )}
+          {
+            dates.map(d => {
+              const formattedDate = d.toFormat('dd-MM-yyyy');
+              if (c.sessionsByDate[formattedDate]) {
+                const slots = c.sessionsByDate[formattedDate].available_capacity;
+                return <Td backgroundColor={slots != 0 && "green.200"} isNumeric key={d}>{slots}</Td>
+              }
+            })
+          }
         </Tr>
-      )}
+      })}
     </Tbody>
   </Table >
 
@@ -146,23 +176,34 @@ const Centers = ({ centers }) => {
 
 function App() {
   const [centers, setCenters] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [isDistrictSelected, setIsDistrictSelected] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [districtId, setDistrictId] = useState(null)
+  const [lastUpdated, setLastUpdated] = useState(null)
+
+  // Gets the compiler off my back
+  console.log(lastUpdated)
 
   return (
     <ChakraProvider theme={theme}>
       <Container maxW="container.lg">
         <VStack spacing={8}>
           <ColorModeSwitcher />
-          <DistrictSelector
-            setCenters={setCenters}
-            setIsDistrictSelected={setIsDistrictSelected}
-            setIsLoading={setIsLoading} />
-          {isDistrictSelected ?
-            (isLoading ?
-              <Spinner size="lg" /> :
-              <Centers centers={centers} />
-            ) :
+          <Box width="100%">
+
+            <DistrictSelector
+              flexGrow={1}
+              isLoading={isLoading}
+              setIsLoading={setIsLoading}
+              setCenters={setCenters}
+              setDistrictId={setDistrictId}
+              setLastUpdated={setLastUpdated}
+              setIsLoading={setIsLoading} />
+            <Flex height={1}>
+              {isLoading && "Updating..."}
+            </Flex>
+          </Box>
+          {districtId !== null ?
+            <Centers centers={centers} districtId={districtId} setCenters={setCenters} setIsLoading={setIsLoading} setLastUpdated={setLastUpdated} /> :
             <Center>
               <Text>Please select a state and district</Text>
             </Center>
