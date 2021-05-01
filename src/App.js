@@ -1,24 +1,18 @@
-import React, { useEffect, useState } from 'react';
 import {
-  ChakraProvider,
-  Text,
-  VStack,
-  theme,
-  Flex,
+  Box,
+  Center, ChakraProvider,
+  Container, Flex,
   Select,
   Table,
-  Tr,
-  Td,
-  Container,
-  Thead,
-  Tbody,
-  Box,
-  Spinner,
-  Center,
+  Tbody, Td, Text,
+  Thead, theme,
+  Tr, VStack
 } from '@chakra-ui/react';
-import { ColorModeSwitcher } from './ColorModeSwitcher';
 import axios from 'axios';
-import { DateTime } from 'luxon'
+import { DateTime } from 'luxon';
+import React, { useEffect, useState } from 'react';
+import { ColorModeSwitcher } from './ColorModeSwitcher';
+
 
 const getStates = async () => {
   const url = 'https://api.cowin.gov.in/api/v2/admin/location/states';
@@ -115,7 +109,8 @@ const Centers = ({ districtId, centers, setCenters, setIsLoading, setLastUpdated
       console.log(5)
       clearInterval(handle)
     }
-  }, [])
+    // gets react-hooks/exhaustive-deps off my back, not sure if this is right
+  }, [districtId, setCenters, setIsLoading, setLastUpdated])
 
 
   // Dates are always today + 7
@@ -163,7 +158,9 @@ const Centers = ({ districtId, centers, setCenters, setIsLoading, setLastUpdated
               const formattedDate = d.toFormat('dd-MM-yyyy');
               if (c.sessionsByDate[formattedDate]) {
                 const slots = c.sessionsByDate[formattedDate].available_capacity;
-                return <Td backgroundColor={slots != 0 && "green.200"} isNumeric key={d}>{slots}</Td>
+                return <Td backgroundColor={slots !== 0 && "green.200"} isNumeric key={d}>{slots}</Td>
+              } else {
+                return null;
               }
             })
           }
@@ -193,7 +190,6 @@ function App() {
             <DistrictSelector
               flexGrow={1}
               isLoading={isLoading}
-              setIsLoading={setIsLoading}
               setCenters={setCenters}
               setDistrictId={setDistrictId}
               setLastUpdated={setLastUpdated}
