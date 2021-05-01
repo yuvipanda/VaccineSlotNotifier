@@ -35,7 +35,7 @@ const getCenters = async (district_id) => {
   const url = 'https://api.cowin.gov.in/api/v2/appointment/sessions/calendarByDistrict'
   const params = {
     district_id: district_id,
-    date: DateTime.now().setZone('Asia/Kolkata').toFormat('dd-MM-yyyy')
+    date: DateTime.now().setZone('Asia/Kolkata').plus({ days: 1 }).toFormat('dd-MM-yyyy')
   }
   let resp;
   try {
