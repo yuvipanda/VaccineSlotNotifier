@@ -1,12 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import {
   ChakraProvider,
-  Box,
   Text,
-  Link,
   VStack,
-  Code,
-  Grid,
   theme,
   Flex,
   Select,
@@ -20,7 +16,6 @@ import {
   Center,
 } from '@chakra-ui/react';
 import { ColorModeSwitcher } from './ColorModeSwitcher';
-import { Logo } from './Logo';
 import axios from 'axios';
 import { DateTime } from 'luxon'
 
@@ -56,13 +51,6 @@ const getCenters = async (district_id) => {
   return data.centers;
 }
 
-async function* getAllCenters(state_id) {
-  const districts = await getDistricts(state_id);
-  for (const district of districts) {
-    yield await getCenters(district.district_id)
-  }
-}
-
 const updateCenters = async (districtId, setCenters) => {
   setCenters(await getCenters(districtId))
 }
@@ -79,11 +67,9 @@ const DistrictSelector = ({ setCenters, isLoading, setIsLoading, setIsDistrictSe
   return <Flex>
     <Select placeholder="Select State" isDisabled={isLoading} onChange={(ev) => {
       setIsDistrictSelected(false)
-      console.log(1)
       setIsLoading(true);
       (async () => {
         setDistricts(await getDistricts(ev.target.value))
-        console.log(2)
         setIsLoading(false)
       })();
     }}>
@@ -94,11 +80,9 @@ const DistrictSelector = ({ setCenters, isLoading, setIsLoading, setIsDistrictSe
     <Select isDisabled={districts === []} placeholder="Select district"
       onChange={(ev) => {
         setIsDistrictSelected(true)
-        console.log(3)
         setIsLoading(true);
         (async () => {
           await updateCenters(ev.target.value, setCenters)
-          console.log(4)
           setIsLoading(false)
         })()
       }} >
