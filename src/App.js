@@ -121,7 +121,7 @@ const Centers = ({ districtId, centers, setCenters, setIsLoading, setLastUpdated
     dates.push(DateTime.now().setZone('Asia/Kolkata').plus({ days: i }));
   }
   let availableCenters = centers.filter(c => {
-    return c.sessions.some(s => s.min_age_limit < 45)
+    return c.sessions.some(s => (s.min_age_limit < 45 && s.available_capacity !== 0))
   }).map(center => {
     const sessionsByDate = center.sessions.reduce((map, session) => {
       map[session.date] = session;
@@ -159,7 +159,7 @@ const Centers = ({ districtId, centers, setCenters, setIsLoading, setLastUpdated
               const formattedDate = d.toFormat('dd-MM-yyyy');
               if (c.sessionsByDate[formattedDate]) {
                 const slots = c.sessionsByDate[formattedDate].available_capacity;
-                return <Td backgroundColor={slots !== 0 && "green.200"} isNumeric key={d}>{slots}</Td>
+                return <Td backgroundColor={slots !== 0 && "green.200"} isNumeric key={d}>{slots !== 0 && slots}</Td>
               } else {
                 return null;
               }
