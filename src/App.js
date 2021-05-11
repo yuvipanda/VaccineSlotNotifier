@@ -121,7 +121,7 @@ const Centers = ({ districtId, centers, setCenters, setIsLoading, setLastUpdated
     dates.push(DateTime.now().setZone('Asia/Kolkata').plus({ days: i }));
   }
   let availableCenters = centers.filter(c => {
-    return c.sessions.some(s => (s.min_age_limit < 45 && s.available_capacity !== 0))
+    return c.sessions.some(s => (s.min_age_limit >= 45 && s.available_capacity !== 0))
   }).map(center => {
     const sessionsByDate = center.sessions.reduce((map, session) => {
       map[session.date] = session;
@@ -135,7 +135,7 @@ const Centers = ({ districtId, centers, setCenters, setIsLoading, setLastUpdated
 
   if (availableCenters.length === 0) {
     return <Center>
-      <Text>No slots available for 18+ persons in this district</Text>
+      <Text>No slots available for 45+ persons in this district</Text>
     </Center>
   }
 
