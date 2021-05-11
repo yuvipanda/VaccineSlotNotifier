@@ -121,7 +121,7 @@ const Centers = ({ districtId, centers, setCenters, setIsLoading, setLastUpdated
     dates.push(DateTime.now().setZone('Asia/Kolkata').plus({ days: i }));
   }
   let availableCenters = centers.filter(c => {
-    return c.sessions.some(s => (s.min_age_limit >= 45 && s.available_capacity !== 0 && s.vaccine.toLowerCase() === 'covishield')) && c.fee_type === 'Paid'
+    return c.sessions.some(s => (s.min_age_limit >= 45 && s.available_capacity !== 0 && s.vaccine.toLowerCase() === 'covishield'))
   }).map(center => {
     const sessionsByDate = center.sessions.reduce((map, session) => {
       map[session.date] = session;
